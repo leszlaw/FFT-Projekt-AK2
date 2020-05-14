@@ -1,5 +1,6 @@
 # depslib dependency file v1.0
-1589412377 source:c:\users\admin\desktop\pwr\semestr4\ak2\proj\fft\main.c
+1589476259 source:c:\users\admin\desktop\pwr\semestr4\ak2\proj\fft\main.c
 	<stdio.h>
 	<stdlib.h>
+	<conio.h>
 
