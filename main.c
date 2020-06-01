@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <conio.h>
-int lc1[32]={1,3227,6518,9940,13573,17515,21895,26892,32768,39928,49041,61305,79109,108022,164736,332699,0,-332699,-164736,-108022,-79109,-61305,-49041,-39928,-32768,-26892,-21895,-17515,-13573,-9940,-6518,-3227,0};
+int lc1[32]={0,3227,6518,9940,13573,17515,21895,26892,32768,39928,49041,61305,79109,108022,164736,332699,0,-332699,-164736,-108022,-79109,-61305,-49041,-39928,-32768,-26892,-21895,-17515,-13573,-9940,-6518,-3227,0};
 int lc2[32]={0,-6393,-12540,-18205,-23170,-27246,-30274,-32138,-32768,-32138,-30274,-27246,-23170,-18205,-12540,-6393,0,6393,12540,18205,23170,27246,30274,32138,32768,32138,30274,27246,23170,18205,12540,6393,0};
 
 typedef struct Signal{
@@ -11,6 +11,7 @@ int length;
 }Signal;
 
 void fft(Signal* signal,int start,int end);
+int quantize(int number);
 int bitSwap(int number,int binaryLength);
 
 int main()
@@ -26,12 +27,11 @@ int main()
     signal->length=length;
 
     fft(signal,0,length);
-    for(int i=0;i<8;i++)
-    bitSwap(i,3);
+
 
     //tymczasowe testowanie na chwile obecna wynik jest dobry
     for(int i=0;i<length;i++)
-        printf("%d \n",signal->re[bitSwap(i,4)]);
+        printf("%d , %d \n",signal->re[bitSwap(i,5)],signal->im[bitSwap(i,5)]);
 
     getch();
 
@@ -83,19 +83,27 @@ void fft(Signal* signal,int start,int length){
         signal->re[i+len4]=re[i]-im[i+len4];
         signal->im[i+len4]=im[i]+re[i+len4];
 
-        signal->re[i]+=((signal->im[i]*lc1[i*stride])>>14);
-        signal->im[i]+=((signal->re[i]*lc2[i*stride])>>14);
-        signal->re[i]+=((signal->im[i]*lc1[i*stride])>>14);
+        signal->re[i]+=quantize(signal->im[i]*lc1[(i-start-len2)*stride]);
+        signal->im[i]+=quantize(signal->re[i]*lc2[(i-start-len2)*stride]);
+        signal->re[i]+=quantize(signal->im[i]*lc1[(i-start-len2)*stride]);
 
-        signal->re[i+len4]+=((signal->im[i+len4]*lc1[i*stride*3])>>14);
-        signal->im[i+len4]+=((signal->re[i+len4]*lc2[i*stride*3])>>14);
-        signal->re[i+len4]+=((signal->im[i+len4]*lc1[i*stride*3])>>14);
+        signal->re[i+len4]+=quantize(signal->im[i+len4]*lc1[(i-start-len2)*3*stride]);
+        signal->im[i+len4]+=quantize(signal->re[i+len4]*lc2[(i-start-len2)*3*stride]);
+        signal->re[i+len4]+=quantize(signal->im[i+len4]*lc1[(i-start-len2)*3*stride]);
+
     }
     fft(signal,start,len2);
     fft(signal,start+len2,len4);
     fft(signal,start+len2+len4,len4);
     }
 
+}
+
+int quantize(int number){
+    number>>=14;
+    number++;
+    number>>=1;
+    return number;
 }
 
 int bitSwap(int number,int binaryLength){
